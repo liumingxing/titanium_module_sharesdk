@@ -1,0 +1,13 @@
+*.merge-left*
+*.merge-right*
+*.mine
+*.prej
+*.working
+.svn
+_svn
+svn-commit*.tmp
+build
+android/build
+android/dist/modules/
+iphone/build
+.DS_Store
