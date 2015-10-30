@@ -9,8 +9,6 @@
 package com.mamashai.sharesdk;
 
 import java.util.HashMap;
-import android.os.Handler;
-import android.os.Handler.Callback;
 
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.annotations.Kroll;
@@ -23,6 +21,11 @@ import org.appcelerator.titanium.util.TiRHelper;
 import org.appcelerator.titanium.util.TiRHelper.ResourceNotFoundException;
 
 import android.app.Activity;
+
+import java.util.Iterator;  
+import java.util.List;  
+import java.util.Map.Entry;  
+
 
 import cn.sharesdk.framework.ShareSDK;
 import cn.sharesdk.onekeyshare.OnekeyShare;
@@ -40,7 +43,6 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 	private static final int MSG_AUTH_ERROR= 3;
 	private static final int MSG_AUTH_COMPLETE = 4;
 	
-	private Handler handler;
 	private OnLoginListener signupListener;
 	
 	// Standard Debugging variables
@@ -54,7 +56,6 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 	{
 		super();
 		
-		handler = new Handler(this);
 	}
 
 	@Kroll.onAppCreate
@@ -63,11 +64,9 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 		Log.d(TAG, "inside onAppCreate");
 		ShareSDK.initSDK(app);
 		
-		
 		// put module init code that needs to run when the application is created
 	}
 	
-	// Methods
 	@Kroll.method
 	public void fire(final HashMap args){
 		HashMap<String, Object> event = new HashMap<String, Object>();
@@ -80,10 +79,6 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
       Log.d(TAG, "share");
       Log.d(TAG, getActivity().toString());
       
-      HashMap<String, Object> event = new HashMap<String, Object>();
-      event.put("code", 1);
-      fireEvent("hello_event", event);
-
       Activity activity = TiApplication.getInstance().getCurrentActivity();
       Log.d(TAG, activity.toString());
       ShareSDK.initSDK(activity);
@@ -171,7 +166,7 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 	public void login(final HashMap args){
 		String tp = (String)args.get("tp");
 		
-		if(tp.equals("weixin")) {
+		if(tp.equals("Wechat")) {
 				//微信登录
 				//测试时，需要打包签名；sample测试时，用项目里面的demokey.keystore
 				//打包签名apk,然后才能产生微信的登录
@@ -180,14 +175,14 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 				
 				Log.d(TAG, "start weixin authorize");
 		}
-		else if (tp.equals("weibo")) {
+		else if (tp.equals("SinaWeibo")) {
 				//新浪微博
 				Platform sina = ShareSDK.getPlatform(SinaWeibo.NAME);
 				authorize(sina);
 				
 				Log.d(TAG, "start weibo authorize");
 		}
-		else if (tp.equals("qq")) {
+		else if (tp.equals("QZone")) {
 				//QQ空间
 				Platform qzone = ShareSDK.getPlatform(QZone.NAME);
 				authorize(qzone);
@@ -222,89 +217,35 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 		Log.d(TAG, "on Complete");
 		
 		if (action == Platform.ACTION_USER_INFOR) {
-			Message msg = new Message();
-			msg.what = MSG_AUTH_COMPLETE;
-			msg.obj = new Object[] {platform.getName(), res};
-			handler.sendMessage(msg);
+			HashMap<String, Object> event = new HashMap<String, Object>();
+			//event.put("json", res.toString());
+			res.put("platform", platform.getName());
+			res.put("code", 0);
+			res.put("text", "授权成功");
+			res.remove("status");
+			fireEvent("third_login", res);	
 		}
 	}
 	
 	public void onError(Platform platform, int action, Throwable t) {
-		Log.d(TAG, "on Error");
-	
 		if (action == Platform.ACTION_USER_INFOR) {
-			handler.sendEmptyMessage(MSG_AUTH_ERROR);
+			HashMap<String, Object> event = new HashMap<String, Object>();
+			event.put("code", -1);
+			event.put("platform", platform.getName());
+			event.put("text", "授权失败");
+			fireEvent("third_login", event);
 		}
 		t.printStackTrace();
 	}
 	
 	public void onCancel(Platform platform, int action) {
-		Log.d(TAG, "on Cancel");
-	
 		if (action == Platform.ACTION_USER_INFOR) {
-			handler.sendEmptyMessage(MSG_AUTH_CANCEL);
+			HashMap<String, Object> event = new HashMap<String, Object>();
+			event.put("code", -2);
+			event.put("platform", platform.getName());
+			event.put("text", "取消授权");
+			fireEvent("third_login", event);
 		}
-	}
-	
-	public boolean handleMessage(Message msg) {
-		switch(msg.what) {
-			case MSG_AUTH_CANCEL: {
-				//取消授权
-				
-				HashMap<String, Object> event = new HashMap<String, Object>();
-				//event.put("code", -1);
-				event.put("text", "取消授权");
-				fireEvent("third_login", event);
-				Log.d(TAG, "发送事件");
-				boolean r = fireEvent("hello_event", event);
-				Log.d(TAG, r ? "侦听了" : "没侦听");
-				
-				boolean r2 = fireEvent("hello_event2", event);
-				Log.d(TAG, r2 ? "侦听了" : "没侦听");
-				Log.d(TAG, "取消授权");
-				
-			} break;
-			case MSG_AUTH_ERROR: {
-				//授权失败
-				HashMap<String, Object> event = new HashMap<String, Object>();
-				event.put("code", -1);
-				event.put("text", "授权失败");
-				fireEvent("third_login", event);
-				
-				Log.d(TAG, "授权失败");
-			} break;
-			case MSG_AUTH_COMPLETE: {
-				//授权成功
-				/*
-				HashMap<String, Object> event = new HashMap<String, Object>();
-				event.put("code", 0);
-				event.put("text", "操作成功");
-				fireEvent("third_login", event);
-				*/
-				
-				Object[] objs = (Object[]) msg.obj;
-				String platform = (String) objs[0];
-				HashMap<String, Object> res = (HashMap<String, Object>) objs[1];
-				/*
-				if (signupListener != null && signupListener.onSignin(platform, res)) {
-					SignupPage signupPage = new SignupPage();
-					signupPage.setOnLoginListener(signupListener);
-					signupPage.setPlatform(platform);
-					signupPage.show(activity, null);
-				}
-				*/
-				
-				//HashMap<String, Object> event = new HashMap<String, Object>();
-				//event.put("code", 0);
-				//event.put("text", "操作成功");
-				res.put("code", 0);
-				res.put("text", "操作成功");
-				fireEvent("third_login", res);
-				
-				Log.d(TAG, "授权成功");
-			} break;
-		}
-		return false;
 	}
 }
 
