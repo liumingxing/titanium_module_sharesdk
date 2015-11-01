@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import cn.sharesdk.framework.ShareSDK;
 import cn.sharesdk.onekeyshare.OnekeyShare;
 import cn.sharesdk.framework.Platform;
+import cn.sharesdk.framework.PlatformDb;
 import cn.sharesdk.framework.PlatformActionListener;
 import cn.sharesdk.sina.weibo.SinaWeibo;
 import cn.sharesdk.tencent.qzone.QZone;
@@ -217,13 +218,21 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 		Log.d(TAG, "on Complete");
 		
 		if (action == Platform.ACTION_USER_INFOR) {
+			PlatformDb db = platform.getDb();
+			
 			HashMap<String, Object> event = new HashMap<String, Object>();
-			//event.put("json", res.toString());
-			res.put("platform", platform.getName());
-			res.put("code", 0);
-			res.put("text", "授权成功");
-			res.remove("status");
-			fireEvent("third_login", res);	
+			event.put("json", res.toString());
+			event.put("platform", platform.getName());
+			event.put("code", 0);
+			event.put("text", "授权成功");
+			event.put("uid", db.getUserId());
+			event.put("nickname", db.getUserName());
+			event.put("gender", db.getUserGender());
+			event.put("profileImage", db.getUserIcon());
+			event.put("token", db.getToken());
+			event.put("secret", db.getTokenSecret());
+			event.put("expired", db.getExpiresIn());
+			fireEvent("third_login", event);	
 		}
 	}
 	
