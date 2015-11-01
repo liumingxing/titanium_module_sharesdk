@@ -14,6 +14,16 @@
 //
 // Adding a framework for a specific version(s) of iPhone:
 //
+
+//t_path = "../../modules/iphone/com.mamashai.sharesdk/1.0/platform/"
+
+//OTHER_LDFLAGS=$(inherited) -F$(t_path) -framework ImageIO -framework Social -framework Accounts -framework TencentWeiboConnection -framework WeChatConnection -framework SMSConnection -framework SinaWeiboConnection -framework QZoneConnection -framework QQConnection -framework MailConnection -framework CopyConnection -lstdc++.6.0.9
+
+
+t_path = "../../modules/iphone/com.mamashai.sharesdk/1.0/platform/"
+
+OTHER_LDFLAGS=$(inherited) -framework ImageIO -framework MOBFoundation -framework CoreTelephony -F$(t_path) -framework ShareSDK -F$(t_path)Core/ -framework AGCommon -framework ShareSDKCoreService -F$(t_path)UI/ -framework ShareSDKFlatShareViewUI -framework ShareSDKiPadDefaultShareViewUI -framework ShareSDKShareActionSheet -F$(t_path)Connection/ -framework MailConnection -framework QQConnection -framework QZoneConnection  -framework SinaWeiboConnection -framework TencentWeiboConnection -framework WeChatConnection -framework SMSConnection -F$(t_path)Extend/QQConnectSDK/ -framework TencentOpenAPI
+
 // OTHER_LDFLAGS[sdk=iphoneos4*]=$(inherited) -framework Foo
 // OTHER_LDFLAGS[sdk=iphonesimulator4*]=$(inherited) -framework Foo
 //
