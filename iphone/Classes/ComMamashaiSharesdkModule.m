@@ -401,6 +401,24 @@
     });
 }
 
+-(id)isWeixinInstalled:(id)args{
+	if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"weixin://"]])
+	{
+		return @"yes";
+	}
+	else{
+		return @"no";
+	}
+	
+	if ([WXApi isWXAppInstalled]) {
+     	//判断是否有微信
+     	return @"yes";
+	}
+	else{
+		return @"no";
+	}
+}
+
 -(void)login:(id)args
 {
     ENSURE_UI_THREAD_1_ARG(args);
