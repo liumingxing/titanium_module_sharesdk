@@ -45,8 +45,7 @@
     NSString * configPath = [self getPathToModuleAsset:@"ShareSDK.plist"];
     NSMutableDictionary *data = [[NSMutableDictionary alloc] initWithContentsOfFile:configPath];
     
-    BOOL hasAppKey = [ data objectForKey:@"AppKey"];
-    NSString * AppKey = hasAppKey ? @"" : (NSString * )[data objectForKey:@"AppKey"];
+    NSString* AppKey = [ data objectForKey:@"AppKey"];
     
     NSLog(@"ShareSDKModule AppKey:%@", AppKey);
     
@@ -117,6 +116,7 @@
          **/
         
         NSString * AppId = [pWechat objectForKey:@"AppId"];
+        NSString * AppSecret = [pWechat objectForKey:@"AppSecret"];
         
         if(AppId == nil){
             AppId = [pWechatMoments objectForKey:@"AppId"];
@@ -126,9 +126,9 @@
             AppId = [pWechatFavorite objectForKey:@"AppId"];
         }
         
-        [ShareSDK connectWeChatWithAppId:AppId wechatCls:[WXApi class]];
+        [ShareSDK connectWeChatWithAppId:AppId appSecret:AppSecret wechatCls:[WXApi class]];
         
-        NSLog(@"ShareSDKModule Wechat AppKey:%@", AppId);
+        NSLog(@"ShareSDKModule Wechat AppKey:%@, AppSecret:%@", AppId, AppSecret);
     }
     
     /** QQ的字段和android的不一样 要注意 */
@@ -419,6 +419,14 @@
 	}
 }
 
+-(void)handleOpenURL:(id)args
+{
+    NSString* url = [args objectAtIndex:0];
+    NSLog(@"handleOpenURL: %@", url);
+    
+    return [ShareSDK handleOpenURL:[NSURL URLWithString:url] wxDelegate:nil];
+}
+
 -(void)login:(id)args
 {
     ENSURE_UI_THREAD_1_ARG(args);
@@ -463,12 +471,14 @@
                                    
                                    
                                    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:[userInfo uid], @"uid",
+                                        tp, @"platform",
+                                        @"授权成功", @"text",
                                         [userInfo nickname],@"nickname",
                                         [userInfo profileImage],@"profileImage",
                                         [[userInfo credential] token], @"token",
                                         [[userInfo credential] secret] ? [[userInfo credential] secret] : @"", @"secret",
                                         [[userInfo credential] expired], @"expired",
-                                        [userInfo gender] ? [NSNumber numberWithInt:[userInfo gender]] : @"-1", @"gender",
+                                        [NSNumber numberWithInt:[userInfo gender]], @"gender",
                                         [userInfo verifyType] ? [NSNumber numberWithInt:[userInfo verifyType]] : @"", @"verifyType",
                                         [userInfo birthday] ? [userInfo birthday] : @"", @"birthday",
                                         [NSNumber numberWithInt:[userInfo followerCount]], @"followerCount",

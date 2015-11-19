@@ -1,0 +1,37 @@
+//
+// PLACE ANY BUILD DEFINITIONS IN THIS FILE AND THEY WILL BE 
+// PICKED UP DURING THE APP BUILD FOR YOUR MODULE
+//
+// see the following webpage for instructions on the settings
+// for this file:
+// http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/XcodeBuildSystem/400-Build_Configurations/build_configs.html
+// 
+
+//
+// How to add a Framework (example)
+//
+// OTHER_LDFLAGS=$(inherited) -framework Foo
+//
+// Adding a framework for a specific version(s) of iPhone:
+//
+
+//t_path = "../../modules/iphone/com.mamashai.sharesdk/1.0/platform/"
+
+//OTHER_LDFLAGS=$(inherited) -F$(t_path) -framework ImageIO -framework Social -framework Accounts -framework TencentWeiboConnection -framework WeChatConnection -framework SMSConnection -framework SinaWeiboConnection -framework QZoneConnection -framework QQConnection -framework MailConnection -framework CopyConnection -lstdc++.6.0.9
+
+
+t_path = "../../modules/iphone/com.mamashai.sharesdk/1.0/platform/"
+
+OTHER_LDFLAGS=$(inherited) -framework ImageIO -framework MOBFoundation -framework CoreTelephony -F$(t_path) -framework ShareSDK -F$(t_path)Core/ -framework AGCommon -framework ShareSDKCoreService -F$(t_path)UI/ -framework ShareSDKFlatShareViewUI -framework ShareSDKiPadDefaultShareViewUI -framework ShareSDKShareActionSheet -F$(t_path)Connection/ -framework MailConnection -framework QQConnection -framework QZoneConnection  -framework SinaWeiboConnection -framework TencentWeiboConnection -framework WeChatConnection -framework SMSConnection -F$(t_path)Extend/QQConnectSDK/ -framework TencentOpenAPI
+
+// OTHER_LDFLAGS[sdk=iphoneos4*]=$(inherited) -framework Foo
+// OTHER_LDFLAGS[sdk=iphonesimulator4*]=$(inherited) -framework Foo
+//
+//
+// How to add a compiler define:
+//
+// OTHER_CFLAGS=$(inherited) -DFOO=1
+//
+//
+// IMPORTANT NOTE: always use $(inherited) in your overrides
+// 

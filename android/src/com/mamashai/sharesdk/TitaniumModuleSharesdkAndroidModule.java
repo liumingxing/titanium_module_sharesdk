@@ -49,7 +49,7 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 	// Standard Debugging variables
 	private static final String TAG = "Sharesdk_Android_Module";
 	private static final boolean DBG = TiConfig.LOGD;
-
+	
 	// You can define constants with @Kroll.constant, for example:
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
 
@@ -62,10 +62,8 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 	@Kroll.onAppCreate
 	public static void onAppCreate(TiApplication app)
 	{
-		Log.d(TAG, "inside onAppCreate");
-		ShareSDK.initSDK(app);
-		
-		// put module init code that needs to run when the application is created
+		String key = app.getAppProperties().getString("sharesdkkey", "androidv1101");
+		ShareSDK.initSDK(app, key);
 	}
 	
 	@Kroll.method
@@ -82,7 +80,7 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
       
       Activity activity = TiApplication.getInstance().getCurrentActivity();
       Log.d(TAG, activity.toString());
-      ShareSDK.initSDK(activity);
+      //ShareSDK.initSDK(activity);
 
       String title = "" , content = "", url ="", type= "", imageUrl = "";
       if (args.containsKey("title")) {
