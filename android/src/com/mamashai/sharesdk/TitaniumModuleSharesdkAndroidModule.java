@@ -155,7 +155,8 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 //      oks.setLongitude(113.385708f);
       oks.setSilent(false);
 
-//      oks.setShareContentCustomizeCallback(new ShareContentCustomizeDemo());
+      //oks.setShareContentCustomizeCallback(new ShareContentCustomizeDemo());
+      oks.setCallback(this);
       Log.d(TAG, activity.toString());
       oks.show(activity.getBaseContext());
       Log.d(TAG, "show finish");
@@ -214,6 +215,7 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 	
 	public void onComplete(Platform platform, int action, HashMap<String, Object> res) {
 		Log.d(TAG, "on Complete");
+		Log.d(TAG,  String.valueOf(action));
 		
 		if (action == Platform.ACTION_USER_INFOR) {
 			PlatformDb db = platform.getDb();
@@ -232,6 +234,11 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 			event.put("expired", db.getExpiresIn());
 			fireEvent("third_login", event);	
 		}
+		else if (action == Platform.ACTION_SHARE){
+			HashMap<String, Object> event = new HashMap<String, Object>();
+			event.put("platform", platform.getName());
+			fireEvent("share_success", event);
+		}
 	}
 	
 	public void onError(Platform platform, int action, Throwable t) {
@@ -241,6 +248,11 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 			event.put("platform", platform.getName());
 			event.put("text", "授权失败");
 			fireEvent("third_login", event);
+		}
+		else if (action == Platform.ACTION_SHARE){
+			HashMap<String, Object> event = new HashMap<String, Object>();
+			event.put("platform", platform.getName());
+			fireEvent("share_failed", event);
 		}
 		t.printStackTrace();
 	}
@@ -252,6 +264,11 @@ public class TitaniumModuleSharesdkAndroidModule extends KrollModule implements 
 			event.put("platform", platform.getName());
 			event.put("text", "取消授权");
 			fireEvent("third_login", event);
+		}
+		else if (action == Platform.ACTION_SHARE){
+			HashMap<String, Object> event = new HashMap<String, Object>();
+			event.put("type", platform.getName());
+			fireEvent("share_failed", event);
 		}
 	}
 }

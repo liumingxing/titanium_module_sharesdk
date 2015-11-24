@@ -391,10 +391,19 @@
                                     if (state == SSPublishContentStateSuccess)
                                     {
                                         NSLog(@"分享成功");
+                                        
+                                        NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:type], @"platform", nil];
+                                        TiModule* _app = self;
+                                        [_app fireEvent:@"share_success" withObject:dict];
+                                        
                                     }
                                     else if (state == SSPublishContentStateFail)
                                     {
                                         NSLog(@"分享失败,错误码:%d,错误描述:%@", [error errorCode], [error errorDescription]);
+                                        
+                                        NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:type], @"platform", nil];
+                                        TiModule* _app = self;
+                                        [_app fireEvent:@"share_failed" withObject:dict];
                                     }
                                 }];
         
@@ -490,6 +499,11 @@
                                         [userInfo aboutMe], @"aboutMe",
                                                          nil];
                                    
+                                   TiModule* _app = self;
+                                   [_app fireEvent:@"third_login" withObject:dict];
+                               }
+                               else{
+                                   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:@"授权失败", @"text", nil];
                                    TiModule* _app = self;
                                    [_app fireEvent:@"third_login" withObject:dict];
                                }
