@@ -9,10 +9,12 @@
 #import "TiBase.h"
 #import "TiHost.h"
 #import "TiUtils.h"
+#import "TiApp.h"
 
 #import <ShareSDK/ShareSDK.h>
 #import <TencentOpenAPI/QQApiInterface.h>
 #import <TencentOpenAPI/TencentOAuth.h>
+#import <QZoneConnection/QZoneConnection.h>
 #import "WXApi.h"
 #import "WeiboSDK.h"
 
@@ -34,6 +36,40 @@
 }
 
 #pragma mark Lifecycle
+
+//加上此功能，ios微信登录获取不到unioid及省市等信息，故注销
+-(void)resumed:(id)sender
+{
+    // This method is called when the application has been resumed
+    
+    NSString * url = [[[TiApp app] launchOptions] objectForKey:@"url"];
+
+    return [ShareSDK handleOpenURL:[NSURL URLWithString:url]
+                        wxDelegate:self];
+
+    [super resumed:sender];
+}
+
+- (void)handleOpenUrl:(NSNotification *)notification
+{
+    NSLog(@"ShareSDKModule handleOpenUrl");
+    NSDictionary * userInfo = notification.userInfo;
+    UIApplication * application = [userInfo objectForKey:@"application"];
+    NSLog(@"ShareSDKModule handleOpenUrl application %@", application);
+    NSURL * url = [userInfo objectForKey:@"url"];
+    NSLog(@"ShareSDKModule handleOpenUrl url %@", url);
+    NSString * sourceApplication = [userInfo objectForKey:@"sourceApplication"];
+    NSLog(@"ShareSDKModule handleOpenUrl sourceApplication %@", sourceApplication);
+    id annotation = [userInfo objectForKey:@"annotation"];
+    NSLog(@"ShareSDKModule handleOpenUrl annotation %@", annotation);
+    
+    [ShareSDK handleOpenURL:url
+          sourceApplication:sourceApplication
+                 annotation:annotation
+                 wxDelegate:self];
+    
+    NSLog(@"ShareSDKModule do handleOpenUrl");
+}
 
 -(void)startup
 {
@@ -147,6 +183,10 @@
                                appSecret:AppSecret
                        qqApiInterfaceCls:[QQApiInterface class]
                          tencentOAuthCls:[TencentOAuth class]];
+                         
+        //设置为可以使用web授权页
+        id<ISSQZoneApp> app =(id<ISSQZoneApp>)[ShareSDK getClientWithType:ShareTypeQQSpace];
+    	[app setIsAllowWebAuthorize:YES];                 
         
         NSLog(@"ShareSDKModule QZone AppKey:%@", AppKey);
     }
@@ -189,6 +229,10 @@
         [ShareSDK connectQQWithQZoneAppKey: AppKey
                          qqApiInterfaceCls:[QQApiInterface class]
                            tencentOAuthCls:[TencentOAuth class]];
+        
+        //设置为可以使用web授权页
+        id<ISSQZoneApp> app =(id<ISSQZoneApp>)[ShareSDK getClientWithType:ShareTypeQQSpace];
+        [app setIsAllowWebAuthorize:YES];
         
         NSLog(@"ShareSDKModule QQ AppKey:%@", AppKey);
     }
@@ -235,6 +279,25 @@
 }
 
 #pragma Public APIs
+
+-(void)getQQInfo:(id)args{
+    NSData *data=[[UIPasteboard generalPasteboard] dataForPasteboardType:[args objectAtIndex:0]];
+    if (data) {
+        NSDictionary *dic= [NSKeyedUnarchiver unarchiveObjectWithData:data];
+        NSArray<NSString*> *allKeys = dic.allKeys;
+        NSInteger i;
+        for(i=0; i<allKeys.count; i++){
+            NSString* key = allKeys[i];
+            NSLog(@"---%@: %@----", key, [dic objectForKey:key]);
+        }
+        [self fireEvent:@"qq_login" withObject:dic];
+    }
+    else{
+        NSLog(@"no data");
+    }
+
+}
+
 /*
  args:
  # title:
@@ -428,14 +491,6 @@
 	}
 }
 
--(void)handleOpenURL:(id)args
-{
-    NSString* url = [args objectAtIndex:0];
-    NSLog(@"handleOpenURL: %@", url);
-    
-    return [ShareSDK handleOpenURL:[NSURL URLWithString:url] wxDelegate:nil];
-}
-
 -(void)login:(id)args
 {
     ENSURE_UI_THREAD_1_ARG(args);
@@ -468,7 +523,7 @@
                                    NSLog(@"credential secret = %@",[[userInfo credential] secret]);
                                    NSLog(@"credential expired = %@",[[userInfo credential] expired]);
                                    NSLog(@"gender = %@",[userInfo gender]);
-                                   NSLog(@"verifyType = %@",[userInfo verifyType]);
+                                   //NSLog(@"verifyType = %@",[userInfo verifyType]);
                                    NSLog(@"birthday = %@",[userInfo birthday]);
                                    NSLog(@"followerCount = %i",[userInfo followerCount]);
                                    NSLog(@"friendCount = %i",[userInfo friendCount]);
@@ -478,6 +533,17 @@
                                    NSLog(@"url = %@",[userInfo url]);
                                    NSLog(@"aboutMe = %@",[userInfo aboutMe]);
                                    
+                                   NSString *jsonString=@"{}";
+                                   
+                                   if ([userInfo sourceData]){
+                                       NSError *error = nil;
+                                       NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[userInfo sourceData]
+                                                                                          options:NSJSONWritingPrettyPrinted
+                                                                                            error:&error];
+                                        jsonString = [[NSString alloc] initWithData:jsonData
+                                                                                    encoding:NSUTF8StringEncoding];
+                                       
+                                   }
                                    
                                    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:[userInfo uid], @"uid",
                                         tp, @"platform",
@@ -488,16 +554,17 @@
                                         [[userInfo credential] secret] ? [[userInfo credential] secret] : @"", @"secret",
                                         [[userInfo credential] expired], @"expired",
                                         [NSNumber numberWithInt:[userInfo gender]], @"gender",
-                                        [userInfo verifyType] ? [NSNumber numberWithInt:[userInfo verifyType]] : @"", @"verifyType",
+                                        //[userInfo verifyType] ? [NSNumber numberWithInt:[userInfo verifyType]] : @"", @"verifyType",
                                         [userInfo birthday] ? [userInfo birthday] : @"", @"birthday",
                                         [NSNumber numberWithInt:[userInfo followerCount]], @"followerCount",
                                         [NSNumber numberWithInt:[userInfo friendCount]], @"friendCount",
                                         [NSNumber numberWithInt:[userInfo shareCount]], @"shareCount",
                                         [NSNumber numberWithInt:[userInfo regAt]], @"regAt",
                                         [NSNumber numberWithInt:[userInfo level]], @"level",
-                                        [userInfo url], @"url",
+                                        jsonString, @"json",
                                         [userInfo aboutMe], @"aboutMe",
-                                                         nil];
+                                        [userInfo url], @"url",
+                                        nil];
                                    
                                    TiModule* _app = self;
                                    [_app fireEvent:@"third_login" withObject:dict];
